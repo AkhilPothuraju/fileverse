@@ -904,6 +904,9 @@ def disable_cache(response):
 # =========================
 # RUN
 # =========================
+app = Flask(__name__)
+
 if __name__ == "__main__":
     app.run()
+
 
