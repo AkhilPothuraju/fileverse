@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Full File Comparison</title>
+
+<style>
+:root{
+  --main-red:#c62828;
+  --dark-red:#a61c1c;
+}
+
+*{
+  box-sizing:border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+  margin:0;
+  background:#f2f2f2;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  background:var(--main-red);
+  color:#fff;
+  padding:15px 40px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:bold;
+}
+
+.nav-links{
+  display:flex;
+  gap:15px;
+}
+
+.nav-btn{
+  background:transparent;
+  color:#fff;
+  padding:8px 16px;
+  border:2px solid #fff;
+  border-radius:6px;
+  text-decoration:none;
+  font-weight:bold;
+  transition:0.3s ease;
+}
+
+.nav-btn:hover{
+  background:#fff;
+  color:var(--main-red);
+}
+
+/* ================= PAGE TITLE ================= */
+.page-title{
+  background:var(--main-red);
+  color:#fff;
+  padding:14px 40px;
+  font-size:20px;
+  font-weight:600;
+}
+
+/* ================= LAYOUT ================= */
+.container{
+  padding:20px;
+}
+
+/* ================= CARD ================= */
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
+  box-shadow:0 6px 16px rgba(0,0,0,0.1);
+  margin-bottom:15px;
+}
+
+/* ================= FORM ================= */
+input[type="file"]{
+  padding:6px;
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:6px;
+  background:var(--main-red);
+  color:#fff;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:hover{
+  background:var(--dark-red);
+}
+
+/* ================= DOWNLOAD BUTTON ================= */
+.download-btn{
+  background:#198754;
+}
+
+.download-btn:hover{
+  background:#146c43;
+}
+
+/* ================= PREVIEW ================= */
+.flex{
+  display:flex;
+  gap:15px;
+}
+
+.preview{
+  width:50%;
+  height:380px;
+  overflow:auto;
+  border:1px solid #ccc;
+  padding:10px;
+  background:#fafafa;
+  font-size:14px;
+  line-height:1.5;
+}
+
+/* ================= INFO ================= */
+.info{
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+<script>
+  // Force reload when user navigates using back/forward
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+      window.location.reload();
+    }
+  });
+</script>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">FileVerse</div>
+  <div class="nav-links">
+    <a href="/home" class="nav-btn">Home</a>
+    <a href="/logout" class="nav-btn">Logout</a>
+  </div>
+</nav>
+
+<!-- PAGE TITLE -->
+<div class="page-title">Full File Comparison</div>
+
+<div class="container">
+
+  <!-- UPLOAD FORM -->
+  <div class="card">
+    <form method="POST" enctype="multipart/form-data">
+      <label><b>Select File 1:</b></label><br>
+      <input type="file" name="file1" required><br><br>
+
+      <label><b>Select File 2:</b></label><br>
+      <input type="file" name="file2" required><br><br>
+
+      <button type="submit">Compare Files</button>
+    </form>
+  </div>
+
+  {% if result %}
+
+  <!-- MATCH PERCENTAGE -->
+  <div class="card info">
+    <b>Match Percentage:</b> {{ result.match_percent }}
+  </div>
+
+  <!-- DOWNLOAD BUTTONS (ONLY FOR EXCEL) -->
+  {% if result.excel %}
+  <div class="card" style="text-align:center;">
+    <a href="{{ url_for('download_matched_pdf') }}">
+      <button class="download-btn">⬇ Download Matched PDF</button>
+    </a>
+
+    <a href="{{ url_for('download_matched_excel') }}">
+      <button class="download-btn" style="margin-left:10px;">
+        ⬇ Download Matched Excel
+      </button>
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- RESULT PREVIEW -->
+  {% if result.excel %}
+  <div class="flex">
+    <div class="preview card">
+      <h4>File 1 (Excel)</h4>
+      {{ result.table1 | safe }}
+    </div>
+
+    <div class="preview card">
+      <h4>File 2 (Excel)</h4>
+      {{ result.table2 | safe }}
+    </div>
+  </div>
+  {% else %}
+  <div class="flex">
+    <div class="preview card">
+      <h4>File 1 Preview</h4>
+      {{ result.preview1 | safe }}
+    </div>
+
+    <div class="preview card">
+      <h4>File 2 Preview</h4>
+      {{ result.preview2 | safe }}
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+
+</div>
+
+</body>
+</html>

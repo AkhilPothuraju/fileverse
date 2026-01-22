@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FileVerse | Verify OTP</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page">
+
+  <!-- LEFT SIDE -->
+  <div class="left">
+    <div class="auth-box center">
+
+      <h1 class="logo">FileVerse</h1>
+     
+
+      <p class="info-text">
+        Enter the registered email and OTP sent to your registered email.
+      </p>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <p class="error">{{ messages[0] }}</p>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST">
+
+        <!-- EMAIL -->
+        <div class="otp-box">
+          <input
+            type="email"
+            name="email"
+            placeholder="Your email"
+            required
+          >
+        </div>
+
+        <!-- OTP -->
+        <div class="otp-box">
+          <input
+            type="text"
+            name="otp"
+            maxlength="6"
+            placeholder="Enter OTP"
+            required
+          >
+        </div>
+
+        <button class="btn">Verify OTP</button>
+      </form>
+
+      
+      <p class="resend">
+         Didn’t receive the OTP?
+         <a href="/forgot-password">Resend OTP</a>
+      </p>
+
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="right">
+    <div class="desc-box center">
+      <h2>Secure Verification</h2>
+      <p>
+        OTP verification ensures that only authorized users
+        can reset their password.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

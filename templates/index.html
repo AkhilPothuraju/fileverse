@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FileVerse | Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+</head>
+<body>
+
+<div class="page">
+
+  <!-- LEFT SIDE : LOGIN -->
+  <div class="left">
+    <div class="auth-box">
+
+      <div class="brand">
+        <h1 class="logo">FileVerse</h1>
+        <p class="subtitle">Login to your account</p>
+      </div>
+
+      <!-- BACKEND FLASH MESSAGE -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <p class="error">{{ messages[0] }}</p>
+        {% endif %}
+      {% endwith %}
+
+      <form id="loginForm" method="POST" novalidate>
+
+        <!-- EMAIL -->
+        <div class="input-box">
+          <input type="email" id="loginEmail" name="email" placeholder="Email">
+          <small class="error"></small>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="input-box password-box">
+          <input type="password" id="loginPassword" name="password" placeholder="Password">
+          <i class="fa fa-eye toggle" onclick="togglePassword('loginPassword', this)"></i>
+          <small class="error"></small>
+        </div>
+
+        <a href="/forgot-password" class="forgot">Forgot your password?</a>
+
+
+        <button class="btn" type="submit">Log in</button>
+
+        <p class="switch">
+          Don’t have an account?
+          <a href="/signup">Create an account</a>
+        </p>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE : DESCRIPTION -->
+  <div class="right">
+    <div class="desc-box">
+      <h2>File tools for productive people</h2>
+      <p>
+        FileVerse is a smart file management platform that allows users
+        to upload, organize, and analyze files efficiently.
+      </p>
+      <p>
+        It ensures security, accuracy, and ease of use for students
+        and professionals.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================
+   TOGGLE PASSWORD VISIBILITY
+   ========================= */
+function togglePassword(id, icon) {
+  const input = document.getElementById(id);
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.replace("fa-eye", "fa-eye-slash");
+  } else {
+    input.type = "password";
+    icon.classList.replace("fa-eye-slash", "fa-eye");
+  }
+}
+
+/* =========================
+   FRONTEND LOGIN VALIDATION
+   ========================= */
+document.getElementById("loginForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const email = document.getElementById("loginEmail");
+  const password = document.getElementById("loginPassword");
+
+  clearErrors();
+  let valid = true;
+
+  /* EMAIL */
+  if (email.value.trim() === "") {
+    showError(email, "Email is required");
+    valid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    showError(email, "Invalid email format");
+    valid = false;
+  }
+
+  /* PASSWORD */
+  if (password.value === "") {
+    showError(password, "Password is required");
+    valid = false;
+  }
+
+  /* SUBMIT TO BACKEND */
+  if (valid) {
+    this.submit();   // send to Flask backend
+  }
+});
+
+function showError(input, message) {
+  const error = input.parentElement.querySelector(".error");
+  error.textContent = message;
+}
+
+function clearErrors() {
+  document.querySelectorAll(".error").forEach(e => e.textContent = "");
+}
+</script>
+
+</body>
+</html>

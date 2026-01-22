@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FileVerse | Sign Up</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div class="page">
+
+  <!-- LEFT SIDE : SIGNUP -->
+  <div class="left">
+    <div class="auth-box">
+
+      <div class="brand">
+        <h1 class="logo">FileVerse</h1>
+        <p class="subtitle">Create new account</p>
+      </div>
+
+      <!-- FLASH MESSAGE FROM BACKEND -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <p class="error">{{ messages[0] }}</p>
+        {% endif %}
+      {% endwith %}
+
+      <form id="signupForm" method="POST" novalidate>
+
+        <!-- NAME -->
+        <div class="input-box">
+          <input type="text" id="name" name="name" placeholder="Name">
+          <small class="error"></small>
+        </div>
+
+        <!-- EMAIL -->
+        <div class="input-box">
+          <input type="email" id="email" name="email" placeholder="Email">
+          <small class="error"></small>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="input-box password-box">
+          <input type="password" id="password" name="password" placeholder="Password">
+          <i class="fa fa-eye toggle" onclick="togglePassword('password', this)"></i>
+          <small class="error"></small>
+        </div>
+
+        <!-- CONFIRM PASSWORD -->
+        <div class="input-box password-box">
+          <input type="password" id="confirmPassword" placeholder="Confirm Password">
+          <i class="fa fa-eye toggle" onclick="togglePassword('confirmPassword', this)"></i>
+          <small class="error"></small>
+        </div>
+
+        <button class="btn" type="submit">Sign up</button>
+
+        <p class="switch">
+          Already member?
+          <a href="/">Log in</a>
+        </p>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE : DESCRIPTION -->
+  <div class="right">
+    <div class="desc-box">
+      <h2>File tools for productive people</h2>
+      <p>
+        FileVerse is an intelligent file management platform that enables
+        secure file upload, comparison, compression, and analysis.
+      </p>
+      <p>
+        It ensures privacy, accuracy, and efficiency for students
+        and professionals.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================
+   TOGGLE PASSWORD VISIBILITY
+   ========================= */
+function togglePassword(id, icon) {
+  const input = document.getElementById(id);
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.replace("fa-eye", "fa-eye-slash");
+  } else {
+    input.type = "password";
+    icon.classList.replace("fa-eye-slash", "fa-eye");
+  }
+}
+
+/* =========================
+   FRONTEND VALIDATIONS
+   ========================= */
+document.getElementById("signupForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const name = document.getElementById("name");
+  const email = document.getElementById("email");
+  const password = document.getElementById("password");
+  const confirmPassword = document.getElementById("confirmPassword");
+
+  clearErrors();
+  let valid = true;
+
+  /* NAME */
+  if (name.value.trim() === "") {
+    showError(name, "Name is required");
+    valid = false;
+  } else if (!/^[A-Za-z ]+$/.test(name.value.trim())) {
+    showError(name, "Name can contain only letters");
+    valid = false;
+  }
+
+  /* EMAIL */
+  if (email.value.trim() === "") {
+    showError(email, "Email is required");
+    valid = false;
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+    showError(email, "Invalid email format");
+    valid = false;
+  }
+
+  /* PASSWORD */
+  if (password.value === "") {
+    showError(password, "Password is required");
+    valid = false;
+  } else if (password.value.length < 8) {
+    showError(password, "Password must be at least 8 characters");
+    valid = false;
+  } else if (!/[A-Z]/.test(password.value)) {
+    showError(password, "Password must include one uppercase letter");
+    valid = false;
+  } else if (!/[a-z]/.test(password.value)) {
+    showError(password, "Password must include one lowercase letter");
+    valid = false;
+  } else if (!/[0-9]/.test(password.value)) {
+    showError(password, "Password must include one number");
+    valid = false;
+  } else if (!/[@$!%*?&]/.test(password.value)) {
+    showError(password, "Password must include one special character");
+    valid = false;
+  }
+
+  /* CONFIRM PASSWORD */
+  if (confirmPassword.value === "") {
+    showError(confirmPassword, "Please confirm your password");
+    valid = false;
+  } else if (confirmPassword.value !== password.value) {
+    showError(confirmPassword, "Passwords do not match");
+    valid = false;
+  }
+
+  /* SUBMIT TO BACKEND */
+  if (valid) {
+    this.submit();   // sends data to Flask backend
+  }
+});
+
+function showError(input, message) {
+  const error = input.parentElement.querySelector(".error");
+  error.textContent = message;
+}
+
+function clearErrors() {
+  document.querySelectorAll(".error").forEach(e => e.textContent = "");
+}
+</script>
+
+</body>
+</html>

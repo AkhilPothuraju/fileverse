@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sensitive Info Blur</title>
+
+<style>
+*{ box-sizing:border-box; font-family:Arial, Helvetica, sans-serif; }
+body{ margin:0; background:#f2f2f2; }
+.header{ background:#c62828; color:#fff; padding:14px 20px; font-size:20px; font-weight:600; }
+.wrapper{ max-width:1000px; margin:10px auto; background:#fff; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,0.1); padding:12px; }
+.upload-section{ border:1px solid #ddd; border-radius:6px; padding:10px; margin-bottom:10px; }
+.download-middle{ display:flex; justify-content:flex-end; gap:10px; margin-bottom:8px; }
+.canvas-box{ border:1px solid #ccc; border-radius:6px; background:#fafafa; text-align:center; height:80vh; overflow:auto; padding:10px; }
+
+.canvas-wrap{
+  position:relative;
+  display:inline-block;
+}
+
+canvas{
+  border:1px solid #999;
+  cursor:crosshair;
+  display:block;
+  margin:0 auto;
+  transform-origin:top left;
+}
+
+#overlay{
+  position:absolute;
+  left:0;
+  top:0;
+  pointer-events:none;
+}
+
+.btn{ padding:10px 18px; border:none; border-radius:6px; font-size:14px; cursor:pointer; }
+.btn-outline{ background:#fff; border:1px solid #c62828; color:#c62828; }
+.btn-red{ background:#c62828; color:#fff; }
+.bottom-controls{ display:flex; justify-content:space-between; margin-top:10px; }
+.info{ margin-top:6px; font-size:13px; color:#555; }
+/* ===== NAVBAR (SAME AS OTHER FILEVERSE PAGES) ===== */
+.navbar {
+  background: #c62828;
+  color: white;
+  padding: 8px 40px;   /* 🔽 was 10px */
+  height: 54px;        /* 🔽 was 60px */
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+.nav-links {
+  display: flex;
+  gap: 12px;
+}
+
+.nav-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+/* Home hover */
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Logout button */
+.logout {
+  border: 2px solid white;
+}
+
+.logout:hover {
+  background: white;
+  color: #c62828;
+}
+
+/* PAGE TITLE (RED BAR BELOW NAVBAR) */
+.page-title {
+  background: #c62828;
+  color: white;
+  padding: 8px 40px;   /* 🔽 reduced further */
+  font-size: 21px;
+  font-weight: 600;
+}
+
+</style>
+</head>
+
+<body>
+<script>
+  // Force reload when user navigates using back/forward
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+      window.location.reload();
+    }
+  });
+</script>
+
+<nav class="navbar">
+  <div class="logo">FileVerse</div>
+
+  <div class="nav-links">
+    <a href="/home" class="nav-btn">Home</a>
+    <a href="/logout" class="nav-btn logout">Logout</a>
+  </div>
+</nav>
+
+<div class="page-title">
+  Sensitive Info Blur
+</div>
+
+
+<div class="wrapper">
+
+  <div class="upload-section">
+    <input type="file" id="file">
+  </div>
+
+  <div class="download-middle">
+    <button class="btn btn-outline" onclick="savePage()">Save</button>
+    <button class="btn btn-outline" onclick="downloadFinal()">Download</button>
+  </div>
+
+  <div class="canvas-box">
+    <div id="placeholder" style="padding:40px;color:#777">
+      Upload an image or PDF
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <canvas id="overlay"></canvas>
+    </div>
+  </div>
+
+  <div class="bottom-controls">
+    <button class="btn btn-outline" onclick="prevPage()">Previous</button>
+    <div>
+      <button class="btn btn-red" onclick="applyBlur()">Blur</button>
+      <button class="btn btn-outline" onclick="undoBlur()">Undo</button>
+    </div>
+    <button class="btn btn-outline" onclick="nextPage()">Next</button>
+  </div>
+
+  <div class="info">
+    Page: <span id="p">1</span> |
+    Blur Level: <span id="lvl">0</span>
+  </div>
+
+</div>
+
+<script>
+const fileInput = document.getElementById("file");
+const canvas = document.getElementById("canvas");
+const overlay = document.getElementById("overlay");
+const ctx = canvas.getContext("2d");
+const octx = overlay.getContext("2d");
+const placeholder = document.getElementById("placeholder");
+
+let page = 0, total = 0;
+let boxes = [];
+let blurLevel = 0;
+let historyStack = [];
+let baseScale = 1;
+
+/* Upload */
+fileInput.onchange = () => {
+  const fd = new FormData();
+  fd.append("file", fileInput.files[0]);
+
+  fetch("/upload-blur", { method:"POST", body:fd })
+    .then(r => r.json())
+    .then(d => {
+      if(d.pages === 0){ alert("Invalid file"); return; }
+
+      total = d.pages;
+      page = 0;
+      boxes = [];
+      blurLevel = 0;
+      historyStack = [];
+
+      placeholder.style.display = "none";
+      canvas.style.display = "block";
+      overlay.style.display = "block";
+
+      loadPage();
+    });
+};
+
+/* Load page */
+function loadPage(){
+  fetch(`/get-page/${page}`)
+    .then(r => r.blob())
+    .then(b => {
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = overlay.width = img.naturalWidth;
+        canvas.height = overlay.height = img.naturalHeight;
+
+        const box = document.querySelector(".canvas-box");
+        baseScale = (box.clientWidth * 0.95) / canvas.width;
+
+        canvas.style.transform = overlay.style.transform = `scale(${baseScale})`;
+
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        octx.clearRect(0,0,overlay.width,overlay.height);
+
+        ctx.drawImage(img,0,0);
+
+        p.innerText = page + 1;
+        lvl.innerText = blurLevel;
+      };
+      img.src = URL.createObjectURL(b);
+    });
+}
+
+/* Mouse position */
+function getMousePos(e){
+  const r = canvas.getBoundingClientRect();
+  return {
+    x:(e.clientX - r.left) * (canvas.width / r.width),
+    y:(e.clientY - r.top)  * (canvas.height / r.height)
+  };
+}
+
+/* Selection (OVERLAY ONLY) */
+let sx, sy, drawing=false;
+
+canvas.onmousedown = e => {
+  const p = getMousePos(e);
+  sx = p.x; sy = p.y;
+  drawing = true;
+};
+
+canvas.onmousemove = e => {
+  if(!drawing) return;
+  const p = getMousePos(e);
+
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  octx.strokeStyle = "#c62828";
+  octx.lineWidth = 2;
+  octx.strokeRect(sx, sy, p.x-sx, p.y-sy);
+};
+
+canvas.onmouseup = e => {
+  if(!drawing) return;
+  drawing = false;
+
+  const p = getMousePos(e);
+  boxes.push({ x:sx, y:sy, w:p.x-sx, h:p.y-sy });
+
+  octx.clearRect(0,0,overlay.width,overlay.height);
+};
+
+/* Blur */
+function applyBlur(){
+  historyStack.push(canvas.toDataURL());
+  blurLevel++;
+
+  boxes.forEach(b=>{
+    ctx.filter = `blur(${blurLevel*4}px)`;
+    ctx.drawImage(canvas,b.x,b.y,b.w,b.h,b.x,b.y,b.w,b.h);
+  });
+
+  ctx.filter = "none";
+  lvl.innerText = blurLevel;
+}
+
+/* Undo */
+function undoBlur(){
+  if(!historyStack.length) return;
+  const img = new Image();
+  img.onload = ()=>ctx.drawImage(img,0,0);
+  img.src = historyStack.pop();
+  blurLevel = Math.max(0, blurLevel-1);
+  lvl.innerText = blurLevel;
+}
+
+/* Save */
+function autoSave(){
+  fetch("/save-blur",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ page, image:canvas.toDataURL() })
+  });
+}
+function savePage(){ autoSave(); alert("Saved"); }
+
+/* Navigation */
+function nextPage(){
+  if(page < total-1){
+    autoSave();
+    page++;
+    boxes=[]; blurLevel=0; historyStack=[];
+    loadPage();
+  }
+}
+function prevPage(){
+  if(page > 0){
+    autoSave();
+    page--;
+    boxes=[]; blurLevel=0; historyStack=[];
+    loadPage();
+  }
+}
+
+/* Download */
+function downloadFinal(){
+  autoSave();
+  setTimeout(()=>location="/download-final",800);
+}
+</script>
+
+</body>
+</html>

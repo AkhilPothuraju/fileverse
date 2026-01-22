@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Grammar Check | FileVerse</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+  margin:0;
+  background:#f2f2f2;
+}
+
+/* HEADER */
+.header{
+  background:#c62828;
+  color:#fff;
+  padding:14px 20px;
+  font-size:20px;
+  font-weight:600;
+}
+
+/* MAIN CARD */
+.wrapper{
+  max-width:1100px;
+  margin:20px auto;
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 6px 16px rgba(0,0,0,0.1);
+  padding:20px;
+}
+
+/* FORM */
+textarea{
+  width:100%;
+  height:140px;
+  padding:10px;
+  font-size:15px;
+  margin-bottom:10px;
+}
+
+input[type="file"]{
+  margin-bottom:10px;
+}
+
+button{
+  background:#c62828;
+  color:#fff;
+  border:none;
+  padding:10px 20px;
+  cursor:pointer;
+  border-radius:5px;
+  font-size:14px;
+}
+
+button:hover{
+  background:#a61c1c;
+}
+
+/* PREVIEW */
+.preview-box{
+  display:flex;
+  gap:15px;
+  margin-top:20px;
+}
+
+.preview{
+  width:50%;
+  background:#fafafa;
+  border:1px solid #ccc;
+  border-radius:6px;
+  padding:12px;
+  height:320px;
+  overflow:auto;
+  line-height:1.7;
+}
+
+/* TITLES */
+.preview h4{
+  margin-top:0;
+  color:#c62828;
+}
+
+/* ERROR STYLES (MATCH BACKEND) */
+.error-spelling{
+  background:#ff8a80;
+  padding:2px 3px;
+  border-radius:3px;
+}
+
+.error-grammar{
+  background:#ffd54f;
+  padding:2px 3px;
+  border-radius:3px;
+}
+
+/* Tooltip cursor */
+span[title]{
+  cursor:help;
+}
+
+/* MESSAGE */
+.msg{
+  color:#c62828;
+  margin-top:10px;
+  font-size:14px;
+}
+
+/* NOTE */
+.note{
+  font-size:13px;
+  color:#555;
+  margin-top:10px;
+}
+
+/* ===== NAVBAR (SAME AS OTHER PAGES) ===== */
+.navbar {
+  background: #c62828;
+  color: white;
+  padding: 10px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.logout {
+  border: 2px solid white;
+}
+
+.logout:hover {
+  background: white;
+  color: #c62828;
+}
+
+/* ===== PAGE TITLE ===== */
+.page-title {
+  background: #c62828;
+  color: white;
+  padding: 12px 40px 18px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+</style>
+</head>
+
+<body>
+
+
+<nav class="navbar">
+  <div class="logo">FileVerse</div>
+
+  <div class="nav-links">
+    <a href="/home" class="nav-btn">Home</a>
+    <a href="/logout" class="nav-btn logout">Logout</a>
+  </div>
+</nav>
+
+<div class="page-title">Grammar Check</div>
+
+
+
+
+
+<div class="wrapper">
+
+  <!-- FORM -->
+  <form method="POST" enctype="multipart/form-data">
+    <label><b>Enter Text (Optional)</b></label>
+    <textarea name="text" placeholder="Type or paste your text here..."></textarea>
+
+    <label><b>Or Upload File</b></label><br>
+    <input type="file" name="file"><br><br>
+
+    <button type="submit">Check Grammar</button>
+  </form>
+
+  <div class="note">
+    Supported input: Direct text, TXT files, and PDF files.<br>
+    ⚠️ Corrections are rule-based (LanguageTool). Some complex tense or contextual errors may require manual review.
+  </div>
+
+  {% if error %}
+    <div class="msg">{{ error }}</div>
+  {% endif %}
+
+  {% if highlighted_text %}
+    <div class="preview-box">
+
+      <!-- ORIGINAL -->
+      <div class="preview">
+        <h4>❌ Original (Errors Highlighted)</h4>
+        {{ highlighted_text | safe }}
+      </div>
+
+      <!-- CORRECTED -->
+      <div class="preview">
+        <h4>✅ Suggested Corrections</h4>
+        {{ corrected_text | safe }}
+
+      </div>
+
+    </div>
+  {% endif %}
+
+</div>
+<script>
+  // Force reload when user navigates using back/forward
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+      window.location.reload();
+    }
+  });
+</script>
+
+</body>
+</html>

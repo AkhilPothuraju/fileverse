@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZIP File Extractor | FileVerse</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+  margin:0;
+  background:#f4f4f4;
+}
+
+/* ===== NAVBAR (SAME AS OTHER PAGES) ===== */
+.navbar {
+  background: #c62828;
+  color: white;
+  padding: 12px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 12px;
+}
+
+.nav-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.logout {
+  border: 2px solid white;
+}
+
+.logout:hover {
+  background: white;
+  color: #c62828;
+}
+
+/* ===== PAGE TITLE (FIXED SPACING) ===== */
+.page-title {
+  background:#c62828;
+  color:white;
+  padding: 26px 40px 18px;   /* 👈 MORE SPACE */
+  font-size:22px;
+  font-weight:600;
+}
+
+/* ===== MAIN CARD ===== */
+.container{
+  max-width:1000px;
+  margin:24px auto;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.12);
+  padding:24px;
+}
+
+/* ===== UPLOAD SECTION ===== */
+.upload-box{
+  border:2px dashed #c62828;
+  border-radius:10px;
+  padding:26px;
+  text-align:center;
+  margin-bottom:24px;
+}
+
+.upload-box input{
+  margin-top:10px;
+}
+
+/* ===== BUTTONS ===== */
+.btn{
+  padding:10px 18px;
+  border:none;
+  border-radius:6px;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.btn-red{
+  background:#c62828;
+  color:#fff;
+}
+
+.btn-red:hover{
+  background:#a61c1c;
+}
+
+.btn-outline{
+  background:#fff;
+  border:1px solid #c62828;
+  color:#c62828;
+}
+
+.btn-outline:hover{
+  background:#fff0f0;
+}
+
+/* ===== FILE TREE ===== */
+.tree ul{
+  list-style:none;
+  padding-left:20px;
+}
+
+.tree li{
+  margin:6px 0;
+}
+
+.file, .folder{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.folder{
+  font-weight:600;
+}
+
+.file a{
+  text-decoration:none;
+  color:#333;
+}
+
+.file a:hover{
+  color:#c62828;
+  text-decoration:underline;
+}
+
+/* ===== DOWNLOAD ALL ===== */
+.download-all{
+  text-align:right;
+  margin-top:20px;
+}
+
+.icon{
+  font-size:18px;
+}
+</style>
+</head>
+
+<body>
+<script>
+  // Force reload when user navigates using back/forward
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+      window.location.reload();
+    }
+  });
+</script>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">FileVerse</div>
+  <div class="nav-links">
+    <a href="/home" class="nav-btn">Home</a>
+    <a href="/logout" class="nav-btn logout">Logout</a>
+  </div>
+</nav>
+
+<!-- PAGE TITLE -->
+<div class="page-title">ZIP File Extractor</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+  <form method="POST" enctype="multipart/form-data" class="upload-box">
+    <h3>Upload ZIP File</h3>
+    <input type="file" name="zipfile" required>
+    <br><br>
+    <button class="btn btn-red">Extract Files</button>
+  </form>
+
+  {% if tree %}
+
+  <h3>📁 Extracted Files</h3>
+
+  <div class="tree">
+    {% macro render_tree(tree) %}
+      <ul>
+        {% for name, item in tree.items() %}
+          <li>
+            {% if item.type == "dir" %}
+              <div class="folder">
+                <span class="icon">📂</span> {{ name }}
+              </div>
+              {{ render_tree(item.children) }}
+            {% else %}
+              <div class="file">
+                <span class="icon">📄</span>
+                <a href="{{ url_for('download_item', project=project_name, item_path=item.path) }}">
+                  {{ name }}
+                </a>
+              </div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endmacro %}
+    {{ render_tree(tree) }}
+  </div>
+
+  <div class="download-all">
+    <a href="{{ url_for('download_extracted_project', project=project_name) }}">
+      <button class="btn btn-outline">⬇ Download Full Project</button>
+    </a>
+  </div>
+
+  {% endif %}
+
+</div>
+
+</body>
+</html>
